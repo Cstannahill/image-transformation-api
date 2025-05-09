@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Image API Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+
+        img {
+            display: block;
+            margin-top: 1rem;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h2>API Key</h2>
+    <input type="text" id="apiKey" placeholder="Enter your API key" />
+    <script>  function getApiKey() {
+            const k = document.getElementById('apiKey').value.trim();
+            if (!k) alert('Please enter an API key!');
+            return k;
+        }</script>
+    <h1>Resize Test</h1>
+    <form id="frm">
+        <label>File: <input type="file" id="file" accept="image/*" /></label><br /><br />
+        <label>Width: <input type="number" id="width" value="100" /></label><br /><br />
+        <label>Height: <input type="number" id="height" value="100" /></label><br /><br />
+        <label>
+            Format:
+            <select id="fmt">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="jpg">JPG</option>
+                <option value="webp">WEBP</option>
+                <option value="gif">GIF</option>
+                <option value="bmp">BMP</option>
+                <option value="tiff">TIFF</option>
+                <option value="avif">AVIF</option>
+                <option value="heif">HEIF</option>
+                <option value="ico">ICO</option>
+            </select>
+        </label><br /><br />
+        <button type="submit">Resize</button>
+    </form>
+
+    <h2>Result</h2>
+    <img id="out" alt="Resized image will appear here…" />
+
+    <script>
+        const form = document.getElementById('frm');
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const fileEl = document.getElementById('file');
+            if (!fileEl.files.length) return alert('Pick a file first');
+            const fd = new FormData();
+            fd.append('file', fileEl.files[0]);
+            fd.append('width', document.getElementById('width').value);
+            fd.append('height', document.getElementById('height').value);
+            fd.append('fmt', document.getElementById('fmt').value);
+
+            const res = await fetch('/resize', { method: 'POST', body: fd });
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+            const blob = await res.blob();
+            document.getElementById('out').src = URL.createObjectURL(blob);
+        });
+    </script>
+    <hr />
+    <h2>Crop Image</h2>
+    <form id="frmCrop">
+        <label>File: <input type="file" id="crop-file" accept="image/*" /></label><br /><br />
+        <label>X: <input type="number" id="crop-x" value="0" /></label><br /><br />
+        <label>Y: <input type="number" id="crop-y" value="0" /></label><br /><br />
+        <label>Width: <input type="number" id="crop-width" value="100" /></label><br /><br />
+        <label>Height: <input type="number" id="crop-height" value="100" /></label><br /><br />
+        <label>
+            Format:
+            <select id="crop-fmt">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+                <option value="gif">GIF</option>
+                <option value="bmp">BMP</option>
+                <option value="avif">AVIF</option>
+                <option value="heif">HEIF</option>
+                <option value="ico">ICO</option>
+            </select>
+        </label><br /><br />
+        <button type="submit">Crop</button>
+    </form>
+    <img id="outCrop" alt="Cropped image will appear here…" />
+    <script>
+        document.getElementById('frmCrop').addEventListener('submit', async e => {
+            e.preventDefault();
+            const fileEl = document.getElementById('crop-file');
+            if (!fileEl.files.length) return alert('Pick a file first for cropping.');
+            const fd = new FormData();
+            fd.append('file', fileEl.files[0]);
+            fd.append('x', document.getElementById('crop-x').value);
+            fd.append('y', document.getElementById('crop-y').value);
+            fd.append('width', document.getElementById('crop-width').value);
+            fd.append('height', document.getElementById('crop-height').value);
+            fd.append('fmt', document.getElementById('crop-fmt').value);
+
+            const res = await fetch('/crop', { method: 'POST', headers: { "X-Api-Key": getApiKey() }, body: fd });
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+            const blob = await res.blob();
+            document.getElementById('outCrop').src = URL.createObjectURL(blob);
+        });</script>
+
+    <hr />
+    <h2>Apply Filter</h2>
+    <form id="frmFilter">
+        <label>File: <input type="file" id="filter-file" accept="image/*" /></label><br /><br />
+        <label>
+            Filter:
+            <select id="filter-type">
+                <option value="grayscale">Grayscale</option>
+                <option value="invert">Invert</option>
+                <option value="blur">Blur</option>
+            </select>
+        </label><br /><br />
+        <label>Intensity (for Blur): <input type="number" id="filter-int" value="5" step="1" /></label><br /><br />
+        <label>
+            Format:
+            <select id="filter-fmt">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label><br /><br />
+        <button type="submit">Apply Filter</button>
+    </form>
+    <img id="outFilter" alt="Filtered image will appear here…" />
+    <script>
+        // Filter form handler
+        document.getElementById('frmFilter').addEventListener('submit', async e => {
+            e.preventDefault();
+            const fileEl = document.getElementById('filter-file');
+            if (!fileEl.files.length) return alert('Pick a file first for filtering.');
+            const fd = new FormData();
+            fd.append('file', fileEl.files[0]);
+            fd.append('type', document.getElementById('filter-type').value);
+            fd.append('intensity', document.getElementById('filter-int').value);
+            fd.append('fmt', document.getElementById('filter-fmt').value);
+
+            const res = await fetch('/filter', { method: 'POST', headers: { "X-Api-Key": getApiKey() }, body: fd });
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+            const blob = await res.blob();
+            document.getElementById('outFilter').src = URL.createObjectURL(blob);
+        });
+
+    </script>
+
+    <hr />
+    <h2>Add Watermark</h2>
+    <form id="frmWatermark">
+        <label>File: <input type="file" id="wm-file" accept="image/*" /></label><br /><br />
+        <label>Text: <input type="text" id="wm-text" value="© MyWatermark" /></label><br /><br />
+        <label>Font Size: <input type="number" id="wm-size" value="24" /></label><br /><br />
+        <label>Opacity (0–1): <input type="number" id="wm-opacity" value="0.5" step="0.1" /></label><br /><br />
+        <label>Margin (px): <input type="number" id="wm-margin" value="10" /></label><br /><br />
+        <label>
+            Format:
+            <select id="wm-fmt">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label><br /><br />
+        <button type="submit">Watermark</button>
+    </form>
+    <img id="outWatermark" alt="Watermarked image will appear here…" />
+    <script>
+        document.getElementById('frmWatermark').addEventListener('submit', async e => {
+            e.preventDefault();
+            const apiKey = getApiKey();          // grab it here, after the user typed it
+            const fileEl = document.getElementById('wm-file');
+            if (!fileEl.files.length)
+                return alert('Pick a file first for watermarking.');
+
+            const fd = new FormData();
+            fd.append('file', fileEl.files[0]);
+            fd.append('text', document.getElementById('wm-text').value);
+            fd.append('fontSize', document.getElementById('wm-size').value);
+            fd.append('opacity', document.getElementById('wm-opacity').value);
+            fd.append('margin', document.getElementById('wm-margin').value);
+            fd.append('fmt', document.getElementById('wm-fmt').value);
+
+            // correctly separate headers and body
+            const res = await fetch('/watermark', { method: 'POST', headers: { "X-Api-Key": getApiKey() }, body: fd });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+            const blob = await res.blob();
+            document.getElementById('outWatermark').src = URL.createObjectURL(blob);
+        });
+    </script>
+    <hr />
+    <h2>Rounded Crop</h2>
+    <form id="frmCropRound">
+        <label>File: <input type="file" id="cropR-file" accept="image/*" /></label><br /><br />
+        <label>X: <input type="number" id="cropR-x" value="0" /></label><br /><br />
+        <label>Y: <input type="number" id="cropR-y" value="0" /></label><br /><br />
+        <label>Width: <input type="number" id="cropR-width" value="100" /></label><br /><br />
+        <label>Height: <input type="number" id="cropR-height" value="100" /></label><br /><br />
+        <label>Radius: <input type="number" id="cropR-radius" value="20" /></label><br /><br />
+        <label>
+            Format:
+            <select id="cropR-fmt">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label><br /><br />
+        <button type="submit">Rounded Crop</button>
+    </form>
+    <img id="outCropRound" alt="Rounded crop result…" />
+
+    <script>
+        document.getElementById('frmCropRound').addEventListener('submit', async e => {
+            e.preventDefault();
+            const f = document.getElementById('cropR-file');
+            if (!f.files.length) return alert('Pick a file first.');
+            const fd = new FormData();
+            fd.append('file', f.files[0]);
+            fd.append('x', document.getElementById('cropR-x').value);
+            fd.append('y', document.getElementById('cropR-y').value);
+            fd.append('width', document.getElementById('cropR-width').value);
+            fd.append('height', document.getElementById('cropR-height').value);
+            fd.append('radius', document.getElementById('cropR-radius').value);
+            fd.append('fmt', document.getElementById('cropR-fmt').value);
+
+            const res = await fetch('/crop/rounded', { method: 'POST', headers: { "X-Api-Key": getApiKey() }, body: fd });
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+            const blob = await res.blob();
+            document.getElementById('outCropRound').src = URL.createObjectURL(blob);
+        });
+    </script>
+</body>
+</html>
