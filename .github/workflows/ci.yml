@@ -1,0 +1,50 @@
+name: CI / Build & Publish
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_test_and_publish:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ secrets.REGISTRY_URL }}/myorg/imageapi
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Log in to registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.REGISTRY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: ImageApi/Dockerfile
+        push: true
+        tags: |
+          ${{ env.IMAGE_NAME }}:latest
+          ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    # Optional: trigger a deployment workflow or helm upgrade here
