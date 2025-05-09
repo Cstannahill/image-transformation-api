@@ -40,7 +40,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: ACR Login
-        run: az acr login --name ${{ secrets.ACR_NAME }}
+        run: az acr login --n cstannahillimageapi
 
       - name: Build and push Docker image to ACR
         uses: docker/build-push-action@v3
