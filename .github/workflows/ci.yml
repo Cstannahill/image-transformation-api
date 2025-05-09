@@ -39,8 +39,11 @@ jobs:
           # JSON service principal you stored in GitHub as AZURE_CREDENTIALS
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Select Subscription
+        run: az account set --subscription 576e4344-5356-4a01-9870-cf598544fe7f
+
       - name: ACR Login
-        run: az acr login --name ${{ env.ACR_NAME }}
+        run: az acr login --name ${{ secrets.ACR_NAME }}
 
       - name: Build and push Docker image to ACR
         uses: docker/build-push-action@v3
